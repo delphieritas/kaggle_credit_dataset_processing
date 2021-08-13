@@ -13,13 +13,15 @@ credit_card_balance.csv
 previous_application.csv
 installments_payments.csv
 
-Each supplemental files will eventually become relevant attributes in the final combined csv w.r.t. 'SK_ID_CURR'.
+Each supplemental tables will eventually become relevant attributes in the final combined csv w.r.t. 'SK_ID_CURR'.
+
+In consideration of keeping the potential connections among supplemental tables, we sort each supplemental table on their key attribute before padding them into final combined file.
 
 
 -------------------------
 ## Code scripts of processing the above operation are provided here
 
-import dependency and set dataset directory
+import dependency and set dataset directory, pandas package is required for '1.3.1' version or higher
 ```python
 import pandas as pd
 import os
@@ -33,12 +35,15 @@ def handler(base_table, supplemental_table, key_attribute, folder):
     '''
     base_table: a string of the base table name, e.g. 'application_train'
     supplemental_table: a list of supplemental csv file name strings, e.g. ['previous_application', 'installments_payments']
-    key_attribute: a string of the key attribute, e.g. 'SK_ID_BUREAU'
+    key_attribute: a string of key_attribute, e.g. 'SK_ID_BUREAU', 
+                   or, a list of key_attribute strings, e.g. ['SK_ID_CURR', 'SK_ID_PREV']
     folder: a string of the dataset directory, e.g. '/tmp/user/Documents/Dataset/'
     '''
 
     # read base_table
     base_table = pd.read_csv(folder+'{}.csv'.format(base_table), dtype=object)
+    # sort based on key_attribute
+    base_table = base_table.sort_values(key_attribute,ignore_index=True)
 
     for idx in supplemental_table:
         # create a new column with supplemental_table name in base table, and fill with empty string ''
@@ -47,13 +52,16 @@ def handler(base_table, supplemental_table, key_attribute, folder):
 
         # read one supplemental_table as df
         df = pd.read_csv(folder+'{}.csv'.format(idx), dtype=object)
+        # sort supplemental_table based on key_attribute
+        df = df.sort_values(key_attribute,ignore_index=True)
 
         # loop through base_table entries
         for i in base_table.index:
             # i as each entry index in base_table
-            # extract entries from supplemental_table which share the same key_attribute in selected base_table entry, 
-            # and drop duplicated key_attribute in  extracted supplemental_table
-            selected_entries = (df[df[key_attribute] == base_table[key_attribute].loc[i]]).drop([key_attribute], axis=1)
+            # make mask from supplemental_table which share the same key_attribute in selected base_table entry
+            mask = (df.loc[:,key_attribute]==base_table[key_attribute].iloc[i]).all(axis=1)
+            # extract supplemental entries and drop duplicated key_attribute in  extracted supplemental_table
+            selected_entries = df[mask].drop(key_attribute, axis=1)
             for j in selected_entries:
                 # j as each attribute in supplemental_table columns, loop across columns
                 if j == selected_entries.columns[0]:
@@ -89,6 +97,12 @@ combined_bureau.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False,
 
 #### read 'application_train' table, set 'SK_ID_CURR' as key attribute for inner join
 in the case of concat 'application_train' with other tables, base_table refers to 'application_train', supplemental_table refers to the rest of tables, including the combined bureau table
+
+
+note:
+
+- in case the files are too large, it would be good to run each supplemental_table separately against 'application_train' table
+
 
 ```python
 # set prepared supplemental_table names
