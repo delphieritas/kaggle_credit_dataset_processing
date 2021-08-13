@@ -19,7 +19,7 @@ installments_payments.csv
 ## Code scripts of processing the above operation are provided here
 
 
-```
+```python
 # import dependency
 import pandas as pd
 import os
@@ -29,7 +29,7 @@ folder = '.../dataset/'
 
 ```
 #### firstly, to prepare table 'bureau_balance', we need inner join 'bureau_balance' into 'bureau' on 'SK_ID_BUREAU' attribute
-```
+```python
 # set table name
 idx = 'bureau_balance'
 
@@ -40,25 +40,25 @@ save_file_name = 'combined_bureau_table.csv'
 attribute = 'SK_ID_BUREAU'
 
 # read both supplemental table
-bureau_balance=pd.read_csv(folder+idx+'.csv',dtype=object)
-bureau=pd.read_csv(folder+'bureau.csv',dtype=object)
+bureau_balance = pd.read_csv(folder+idx+'.csv', dtype=object)
+bureau = pd.read_csv(folder+'bureau.csv', dtype=object)
 ```
 <!-- bureau=pd.DataFrame(bureau,columns=['SK_ID_CURR','SK_ID_BUREAU']) -->
 
 By filling with empty string '', the csv file could save the empty value as '\<float> nan'(numpy.nan) type.
-```
+```python
 # create a new column as 'bureau_balance' in table 'bureau', and fill with empty string ''
 bureau[idx] = ''
 ```
 <!-- bureau.to_csv(save_file_name, mode='a',index=False) -->
 <!-- # bureau_balance[bureau_balance['SK_ID_BUREAU']=='5714468'] # bureau_balance['SK_ID_BUREAU'].max() # len(bureau['SK_ID_BUREAU'].unique()) # len(bureau['SK_ID_CURR'].unique()) -->
 
-```
+```python
 # loop through 'bureau' entries
 for i in bureau.index:
     # i as each entry index in bureau
     # extract new entries from 'bureau_balance' which share the same 'SK_ID_BUREAU' attribute in each 'bureau' entry, drop duplicated 'SK_ID_BUREAU' attribute
-    selected_entries= (bureau_balance[bureau_balance[attribute] == bureau[attribute].loc[i]]).drop([attribute],axis=1)
+    selected_entries = (bureau_balance[bureau_balance[attribute] == bureau[attribute].loc[i]]).drop([attribute], axis=1)
     for j in selected_entries:
         # j as each attribute in columns, loop across columns
         if j == selected_entries.columns[0]:
@@ -74,32 +74,32 @@ for i in bureau.index:
 ```
 <!--     pd.DataFrame([ -->
 <!--     bureau.at[i,'SK_ID_CURR'], bureau.at[i,'SK_ID_BUREAU'], str_list -->
-<!--     ]).T.to_csv(save_file_name, mode='a',index=False,header=None) -->
-```
+<!--     ]).T.to_csv(save_file_name, mode='a', index=False, header=None) -->
+```python
 # save the combined bureau table into 'combined_bureau_table.csv' with ',' as the attribute separator
-bureau.to_csv(folder+save_file_name, mode='a',index=False,header=True, sep=',')
+bureau.to_csv(folder+save_file_name, mode='a', index=False, header=True, sep=',')
 ```
 
 #### read 'application_train' table, set 'SK_ID_CURR' as key attribute for all prepared supplemental tables
-```
+```python
 # read target table 'application_train'
-train=pd.read_csv(folder+'application_train.csv', dtype=object) 
+train = pd.read_csv(folder+'application_train.csv', dtype=object) 
 # set which attribute to join on
 attribute = 'SK_ID_CURR'
 ```
 now, let's concat all prepared supplemental tables into 'application_train' table
-```
+```python
 # set supplemental table names
 for idx in  ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'combined_bureau_table']:
     # read one supplemental table
-    df=pd.read_csv(folder+'{}.csv'.format(idx), dtype=object)
+    df = pd.read_csv(folder+'{}.csv'.format(idx), dtype=object)
     # create a new column with the supplemental table's name, and fill with empty string '' 
     train[idx] = ''
 
     for i in train.index:
         # i as each entry index in bureau 
         # extract new entries from supplemental table which share the same 'SK_ID_CURR' attribute in each train table entry, drop duplicated 'SK_ID_CURR' attribute
-        selected_entries=(df[df[attribute] == train[attribute].loc[i]]).drop([attribute],axis=1)
+        selected_entries = (df[df[attribute] == train[attribute].loc[i]]).drop([attribute], axis=1)
         for j in selected_entries:
             # j as the each attribute in supplemental table columns, loop across columns
             if j == selected_entries.columns[0]:
@@ -115,7 +115,7 @@ for idx in  ['previous_application', 'installments_payments', 'POS_CASH_balance'
 
     save_file_name = 'data_{}.csv'.format(idx)
     # save supplemental table info into train table with ',' as the attribute separator
-    train.to_csv(folder+save_file_name, mode='a',index=False,header=True, sep=',')
+    train.to_csv(folder+save_file_name, mode='a', index=False, header=True, sep=',')
 ```
   
 
