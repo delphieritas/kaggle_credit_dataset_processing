@@ -1,4 +1,4 @@
-# kaggle_credit_dataset_processing
+# Kaggle 'Home Credit' Dataset Processing
 
 This document is to process the following kaggle dataset, and to concat supplemental tables (POS_CASH_balance.csv, credit_card_balance.csv, previous_application.csv, installments_payments.csv, bureau_balance.csv and bureau.csv) into application_train.csv:
 ```
@@ -119,6 +119,33 @@ now, let's concat all prepared supplemental tables into 'application_train' tabl
 combined_train = handler(base_table, supplemental_table, key_attribute, folder)
 combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, header=True, sep=',')
 ```
+
+
+----------------------
+## Code for describe dataset files
+
+```python
+
+import numpy as np
+
+def get_stat(df, idx=idx, folder='kaggle_dataset/'):
+    for i in df:
+        # obtain min/max/mean/std info
+        df_col=df[i].describe(include='all')
+        df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
+        # count categorical info
+        df_col=df[i].value_counts()
+        if type(df_col.index[0])!=np.float64  and df_col.size < 60: df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
+
+
+data_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
+
+for idx in data_to_describe:
+    df=pd.read_csv(folder+'inner_joined/'+'{}.csv'.format(idx))
+    get_stat(df,idx)
+
+```
+
 <!-- redundant scripts for tips -->
 <!--
      pd.DataFrame([ 
