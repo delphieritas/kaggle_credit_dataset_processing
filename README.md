@@ -35,8 +35,7 @@ def handler(base_table, supplemental_table, key_attribute, folder):
     '''
     base_table: a string of the base table name, e.g. 'application_train'
     supplemental_table: a list of supplemental csv file name strings, e.g. ['previous_application', 'installments_payments']
-    key_attribute: a string of key_attribute, e.g. 'SK_ID_BUREAU', 
-                   or, a list of key_attribute strings, e.g. ['SK_ID_CURR', 'SK_ID_PREV']
+    key_attribute: a list of key_attribute strings, e.g. ['SK_ID_CURR', 'SK_ID_PREV']
     folder: a string of the dataset directory, e.g. '/tmp/user/Documents/Dataset/'
     '''
 
@@ -59,21 +58,24 @@ def handler(base_table, supplemental_table, key_attribute, folder):
         for i in base_table.index:
             # i as each entry index in base_table
             # make mask from supplemental_table which share the same key_attribute in selected base_table entry
-            mask = (df.loc[:,key_attribute]==base_table[key_attribute].iloc[i]).all(axis=1)
-            # extract supplemental entries and drop duplicated key_attribute in  extracted supplemental_table
-            selected_entries = df[mask].drop(key_attribute, axis=1)
-            for j in selected_entries:
-                # j as each attribute in supplemental_table columns, loop across columns
-                if j == selected_entries.columns[0]:
-                    # convert the first selected supplemental_table attribute into pandas Series, all values converted into string type
-                    str_list = selected_entries[j].map(str)
-                else:
-                    # concat following selected supplemental_table attributes, with '|' as the attribute separator, into pandas Series
-                    str_list += '|' + selected_entries[j].map(str)
-            # use ';' as the entry separator, convert the obtained pandas Series into one long string
-            str_list = ';'.join(str_list) if len(str_list) != 0 else ''
-            # fill the obtained string into the created new attribute in base_table
-            base_table.at[i,idx] = str_list
+            mask = (df.loc[:,key_attribute] == base_table[key_attribute].iloc[i]).all(axis=1)
+            if mask.any():
+                # extract supplemental entries and drop duplicated key_attribute in  extracted supplemental_table
+                selected_entries = df[mask].drop(key_attribute, axis=1)
+                for j in selected_entries:
+                    # j as each attribute in supplemental_table columns, loop across columns
+                    if j == selected_entries.columns[0]:
+                        # convert the first selected supplemental_table attribute into pandas Series, all values converted into string type
+                        str_list = selected_entries[j].map(str)
+                    else:
+                        # concat following selected supplemental_table attributes, with '|' as the attribute separator, into pandas Series
+                        str_list += '|' + selected_entries[j].map(str)
+                # use ';' as the entry separator, convert the obtained pandas Series into one long string
+                str_list = ';'.join(str_list) if len(str_list) != 0 else ''
+                # fill the obtained string into the created new attribute in base_table
+                base_table.at[i,idx] = str_list
+        # inner join, remove redundant rows
+        base_table = base_table.dropna(subset=[idx])
     return base_table
 ```
 #### firstly, to prepare table 'bureau_balance', we need inner join 'bureau_balance' into 'bureau' on 'SK_ID_BUREAU' attribute
@@ -86,7 +88,7 @@ base_table = 'bureau'
 key_attribute = ['SK_ID_BUREAU']
 
 # set combined bureau table name to save
-save_file = 'combine_{}.csv'.format(base_table)
+save_file = 'combine_{}'.format(base_table)
 ```
 concat 'bureau_balance' table into 'bureau' table, and save
 ```python
@@ -112,7 +114,7 @@ base_table = 'application_train'
 # set which key_attribute to join on
 key_attribute = ['SK_ID_CURR']
 # set file name to save
-save_file = 'combine_{}.csv'.format(base_table)
+save_file = 'combine_{}'.format(base_table)
 ```
 now, let's concat all prepared supplemental tables into 'application_train' table, and save
 ```python
@@ -129,32 +131,55 @@ combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, 
 
 import numpy as np
 
-def get_stat(df, idx=idx, folder='kaggle_dataset/'):
-    for i in df:
-        # count categorical info
-        df_col=df[i].value_counts()
-        df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
-        
-        if type(df_col.index[0])!=np.float64  and df_col.size < 60: 
-            # obtain min/max/mean/std info
-            df_col=df[i].describe(include='all')
-            df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
+def get_stat(df_name, save_file, folder='dataset/', buffer=60):
+    df = pd.read_csv(folder+'{}.csv'.format(df_name))
+    # count categorical info
+    df_describe = df[i].value_counts()
+    df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+
+    # obtain min/max/mean/std info
+    if type(df_describe.index[0])!=np.float64 and df_describe.size < buffer: (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
 
 
 
-data_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
 
-for idx in data_to_describe:
-    df=pd.read_csv(folder+'inner_joined/'+'{}.csv'.format(idx))
-    get_stat(df,idx)
+file_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
+
+for idx in file_to_describe:
+    df_name = 'inner_joined/{}'.format(idx)
+    save_file = 'inner_stat/stat_{}'.format(idx)
+    get_stat(df_name, save_file)
 ```    
 ------------------------
 ## Code for converting data into one-hot series
 
 
 ```python
+import numpy as np
+def to_one_hot(file_to_convert, save_file, folder='.../dataset/', buffer=60):
+    df = pd.read_csv(folder+'inner_{}.csv'.format(file_to_convert), dtype=object)
+    for col in df.columns:
+        df_describe = df[col].value_counts()
+        if df_describe.size < buffer:
+        mapping = dict((c, i) for i, c in enumerate(df_describe.index))
+        char_to_int = [mapping[char] for char in df[col]]
+        one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
+
+        one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
+        df[col] = pd.DataFrame(one_hot_str)
+    df.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+``` 
 
 
+```python       
+buffer = 60 
+folder = '../dataset/inner_joined/'
+file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
+
+
+for idx in file_to_convert:
+    save_file = 'one_hot_{}'.format(idx)
+    to_one_hot('inner_'+idx, save_file, folder, buffer)
 
 ```
 
