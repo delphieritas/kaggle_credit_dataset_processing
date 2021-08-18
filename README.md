@@ -83,7 +83,7 @@ in the case of preparing 'bureau_balance', base_table refers to 'bureau', supple
 supplemental_table = ['bureau_balance']
 base_table = 'bureau'
 # set which key_attribute to join on
-key_attribute = 'SK_ID_BUREAU'
+key_attribute = ['SK_ID_BUREAU']
 
 # set combined bureau table name to save
 save_file = 'combine_{}.csv'.format(base_table)
@@ -110,7 +110,7 @@ supplemental_table = ['previous_application', 'installments_payments', 'POS_CASH
 # set base table name
 base_table = 'application_train'
 # set which key_attribute to join on
-key_attribute = 'SK_ID_CURR'
+key_attribute = ['SK_ID_CURR']
 # set file name to save
 save_file = 'combine_{}.csv'.format(base_table)
 ```
@@ -124,18 +124,22 @@ combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, 
 ----------------------
 ## Code for describe dataset files
 
+
 ```python
 
 import numpy as np
 
 def get_stat(df, idx=idx, folder='kaggle_dataset/'):
     for i in df:
-        # obtain min/max/mean/std info
-        df_col=df[i].describe(include='all')
-        df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
         # count categorical info
         df_col=df[i].value_counts()
-        if type(df_col.index[0])!=np.float64  and df_col.size < 60: df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
+        df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
+        
+        if type(df_col.index[0])!=np.float64  and df_col.size < 60: 
+            # obtain min/max/mean/std info
+            df_col=df[i].describe(include='all')
+            df_col.to_csv(folder+'inner_stat/'+'stat_{}.csv'.format(idx), mode='a',index=True)
+
 
 
 data_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
@@ -143,8 +147,19 @@ data_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_b
 for idx in data_to_describe:
     df=pd.read_csv(folder+'inner_joined/'+'{}.csv'.format(idx))
     get_stat(df,idx)
+```    
+------------------------
+## Code for converting data into one-hot series
+
+
+```python
+
+
 
 ```
+
+
+
 
 <!-- redundant scripts for tips -->
 <!--
