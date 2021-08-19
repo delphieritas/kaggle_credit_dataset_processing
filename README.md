@@ -136,16 +136,16 @@ def get_stat(df_name, save_file, folder='dataset/', buffer=32):
     # make a name list for one-hot convertable categorical columns 
     df_col = [* df.columns]
     # iterate through columns
-    for i in df:
+    for col in df:
         # count categorical info
-        df_describe = df[i].value_counts(dropna=False)
+        df_describe = df[col].value_counts(dropna=False)
         # save the description into csv, including category info as index
         df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
         # obtain min/max/mean/std info only when the attributes are numerical values
         if (type(df_describe.index[0])==np.float64 or type(df_describe.index[0])==np.int64) and df_describe.size>buffer: 
-            (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+            (df[col].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
             # remove numerical columns names from list
-            df_col.remove(i)
+            df_col.remove(col)
     return {df_name: df_col}
 
 
@@ -174,7 +174,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
     for col in convert_col:
         df_describe = df[col].value_counts(dropna=False)
         if df_describe.size <= buffer: 
-            # create the rule for converting
+            # create the rule for categorical attributes converting
             mapping = dict((c, i) for i, c in enumerate(df_describe.index))
             # convert categories into digits
             char_to_int = [mapping[char] for char in df[col]]
@@ -183,6 +183,11 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
             # compact one hot numerical series into strings
             one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
             df[col] = pd.DataFrame(one_hot_str)
+        else:
+            # obtain statisics
+            df_describe = df[col].astype('float').describe(include='all')
+            # normalise numerical attributes
+            df[col] = df[col].astype('float') / df_describe.loc['max']
 
     df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
 ``` 
