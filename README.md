@@ -172,12 +172,16 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
 
     for col in convert_col:
         df_describe = df[col].value_counts(dropna=False)
-        if df_describe.size <= buffer: mapping = dict((c, i) for i, c in enumerate(df_describe.index))
-        char_to_int = [mapping[char] for char in df[col]]
-        one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
-
-        one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
-        df[col] = pd.DataFrame(one_hot_str)
+        if df_describe.size <= buffer: 
+            # create the rule for converting
+            mapping = dict((c, i) for i, c in enumerate(df_describe.index))
+            # convert categories into digits
+            char_to_int = [mapping[char] for char in df[col]]
+            # convert digits into one hot encoding
+            one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
+            # compact one hot numerical series into strings
+            one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
+            df[col] = pd.DataFrame(one_hot_str)
 
     df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=True)
 ``` 
