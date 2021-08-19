@@ -138,9 +138,7 @@ def get_stat(df_name, save_file, folder='dataset/', buffer=60):
     df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
 
     # obtain min/max/mean/std info
-    if type(df_describe.index[0])!=np.float64 and df_describe.size < buffer: (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
-
-
+    if type(df_describe.index[0])==np.float64 or type(mydf.index[0])==np.int64: (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
 
 
 file_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
