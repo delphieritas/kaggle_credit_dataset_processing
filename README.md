@@ -131,22 +131,35 @@ combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, 
 
 import numpy as np
 
-def get_stat(df_name, save_file, folder='dataset/', buffer=60):
+def get_stat(df_name, save_file, folder='dataset/', buffer=24):
     df = pd.read_csv(folder+'{}.csv'.format(df_name))
-    # count categorical info
-    df_describe = df[i].value_counts()
-    df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+    # make a name list for one-hot convertable categorical columns 
+    df_col = [* df.columns]
+    # iterate through columns
+    for i in df:
+        # count categorical info
+        df_describe = df[i].value_counts()
+        df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+        # obtain min/max/mean/std info
+        if (type(df_describe.index[0])==np.float64 or type(df_describe.index[0])==np.int64) and df_describe.size>buffer: 
+            (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+            # remove numerical columns names from list
+            df_col.remove(i)
+    return {df_name: df_col}
 
-    # obtain min/max/mean/std info
-    if type(df_describe.index[0])==np.float64 or type(mydf.index[0])==np.int64: (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
 
 
 file_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
 
+'''
+convert_col={}
+'''
 for idx in file_to_describe:
-    df_name = 'inner_joined/{}'.format(idx)
+    folder = 'dataset/inner_joined/'
+    df_name = '{}'.format(idx)
     save_file = 'inner_stat/stat_{}'.format(idx)
-    get_stat(df_name, save_file)
+    convert_col = {**get_stat(df_name, save_file, folder), **convert_col}
+    
 ```    
 ------------------------
 ## Code for converting data into one-hot series
@@ -154,9 +167,11 @@ for idx in file_to_describe:
 
 ```python
 import numpy as np
-def to_one_hot(file_to_convert, save_file, folder='.../dataset/', buffer=60):
+def to_one_hot(file_to_convert, save_file, folder='.../dataset/', buffer=60, convert_col=[]):
     df = pd.read_csv(folder+'inner_{}.csv'.format(file_to_convert), dtype=object)
-    for col in df.columns:
+    if len(convert_col)==0: convert_col = df.columns
+
+    for col in convert_col:
         df_describe = df[col].value_counts()
         if df_describe.size < buffer:
         mapping = dict((c, i) for i, c in enumerate(df_describe.index))
@@ -165,6 +180,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', buffer=60):
 
         one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
         df[col] = pd.DataFrame(one_hot_str)
+
     df.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
 ``` 
 
@@ -175,11 +191,17 @@ folder = '../dataset/inner_joined/'
 file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
 
 
+'''
+
+'''
+
+
 for idx in file_to_convert:
     save_file = 'one_hot_{}'.format(idx)
-    to_one_hot('inner_'+idx, save_file, folder, buffer)
+    to_one_hot('inner_'+idx, save_file, folder, buffer, convert_col=convert_col[idx])
 
 ```
+
 
 
 
