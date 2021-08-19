@@ -168,12 +168,12 @@ for idx in file_to_describe:
 ```python
 import numpy as np
 def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/', buffer=60, convert_col=[]):
-    df = pd.read_csv(folder+'inner_{}.csv'.format(file_to_convert), dtype=object)
+    df = pd.read_csv(folder+'{}.csv'.format(file_to_convert), dtype=object)
     if len(convert_col)==0: convert_col = df.columns
 
     for col in convert_col:
         df_describe = df[col].value_counts()
-        if df_describe.size < buffer: mapping = dict((c, i) for i, c in enumerate(df_describe.index))
+        if df_describe.size <= buffer: mapping = dict((c, i) for i, c in enumerate(df_describe.index))
         char_to_int = [mapping[char] for char in df[col]]
         one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
 
