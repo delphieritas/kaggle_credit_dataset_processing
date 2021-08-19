@@ -139,8 +139,9 @@ def get_stat(df_name, save_file, folder='dataset/', buffer=32):
     for i in df:
         # count categorical info
         df_describe = df[i].value_counts(dropna=False)
+        # save the description into csv, including category info as index
         df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
-        # obtain min/max/mean/std info
+        # obtain min/max/mean/std info only when the attributes are numerical values
         if (type(df_describe.index[0])==np.float64 or type(df_describe.index[0])==np.int64) and df_describe.size>buffer: 
             (df[i].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
             # remove numerical columns names from list
@@ -183,7 +184,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
             one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
             df[col] = pd.DataFrame(one_hot_str)
 
-    df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=True)
+    df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
 ``` 
 
 
