@@ -167,29 +167,28 @@ for idx in file_to_describe:
 
 ```python
 import numpy as np
-def to_one_hot(file_to_convert, save_file, folder='.../dataset/', buffer=60, convert_col=[]):
+def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/', buffer=60, convert_col=[]):
     df = pd.read_csv(folder+'inner_{}.csv'.format(file_to_convert), dtype=object)
     if len(convert_col)==0: convert_col = df.columns
 
     for col in convert_col:
         df_describe = df[col].value_counts()
-        if df_describe.size < buffer:
-        mapping = dict((c, i) for i, c in enumerate(df_describe.index))
+        if df_describe.size < buffer: mapping = dict((c, i) for i, c in enumerate(df_describe.index))
         char_to_int = [mapping[char] for char in df[col]]
         one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
 
         one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
         df[col] = pd.DataFrame(one_hot_str)
 
-    df.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+    df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=True)
 ``` 
 
 
 ```python       
-buffer = 60 
+buffer = 24
 folder = '../dataset/inner_joined/'
 file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
-
+folder2 = '../dataset/one_hot/'
 
 '''
 
@@ -198,7 +197,7 @@ file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_ba
 
 for idx in file_to_convert:
     save_file = 'one_hot_{}'.format(idx)
-    to_one_hot('inner_'+idx, save_file, folder, buffer, convert_col=convert_col[idx])
+    to_one_hot('inner_'+idx, save_file, folder, folder2, buffer, convert_col=convert_col[idx])
 
 ```
 
