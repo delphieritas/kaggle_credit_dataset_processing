@@ -187,7 +187,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
             # obtain statisics
             df_describe = df[col].astype('float').describe(include='all')
             # normalise numerical attributes
-            df[col] = df[col].astype('float') / df_describe.loc['max']
+            df[col] = (df[col].astype('float') -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
 
     df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
 ``` 
