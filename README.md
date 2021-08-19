@@ -151,9 +151,8 @@ def get_stat(df_name, save_file, folder='dataset/', buffer=24):
 
 file_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
 
-'''
 convert_col={}
-'''
+
 for idx in file_to_describe:
     folder = 'dataset/inner_joined/'
     df_name = '{}'.format(idx)
@@ -189,11 +188,6 @@ buffer = 24
 folder = '../dataset/inner_joined/'
 file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
 folder2 = '../dataset/one_hot/'
-
-'''
-
-'''
-
 
 for idx in file_to_convert:
     save_file = 'one_hot_{}'.format(idx)
