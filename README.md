@@ -131,14 +131,14 @@ combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, 
 
 import numpy as np
 
-def get_stat(df_name, save_file, folder='dataset/', buffer=24):
+def get_stat(df_name, save_file, folder='dataset/', buffer=32):
     df = pd.read_csv(folder+'{}.csv'.format(df_name))
     # make a name list for one-hot convertable categorical columns 
     df_col = [* df.columns]
     # iterate through columns
     for i in df:
         # count categorical info
-        df_describe = df[i].value_counts()
+        df_describe = df[i].value_counts(dropna=False)
         df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
         # obtain min/max/mean/std info
         if (type(df_describe.index[0])==np.float64 or type(df_describe.index[0])==np.int64) and df_describe.size>buffer: 
@@ -166,12 +166,12 @@ for idx in file_to_describe:
 
 ```python
 import numpy as np
-def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/', buffer=60, convert_col=[]):
+def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/', buffer=32, convert_col=[]):
     df = pd.read_csv(folder+'{}.csv'.format(file_to_convert), dtype=object)
     if len(convert_col)==0: convert_col = df.columns
 
     for col in convert_col:
-        df_describe = df[col].value_counts()
+        df_describe = df[col].value_counts(dropna=False)
         if df_describe.size <= buffer: mapping = dict((c, i) for i, c in enumerate(df_describe.index))
         char_to_int = [mapping[char] for char in df[col]]
         one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
@@ -184,7 +184,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
 
 
 ```python       
-buffer = 24
+buffer = 32
 folder = '../dataset/inner_joined/'
 file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
 folder2 = '../dataset/one_hot/'
