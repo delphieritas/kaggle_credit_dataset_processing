@@ -172,16 +172,16 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
     if len(convert_col)==0: convert_col = df.columns
 
     for col in convert_col:
-        df_describe = df[col].value_counts(dropna=False)
+        df_describe = df[col].value_counts(dropna=False)    
         if df_describe.size <= buffer: 
             # create the rule for categorical attributes converting
-            mapping = dict((c, i) for i, c in enumerate(df_describe.index))
-            # convert categories into digits
-            char_to_int = [mapping[char] for char in df[col]]
-            # convert digits into one hot encoding
-            one_hot=np.eye(len(mapping))[char_to_int].astype(int).astype(str)  # char_to_int = char_to_int.reshape(-1)
-            # compact one hot numerical series into strings
-            one_hot_str = [''.join(one_hot[x]) for x in range(len(one_hot))]
+            char_to_int = df[col].astype('category').cat.codes
+            if df_describe.size > 2: 
+                one_hot=np.eye(df_describe.size)[char_to_int].astype(int).astype(str)
+                # compact one hot numerical series into strings
+                one_hot_str = [''.join(x) for x in one_hot]
+            else:
+                one_hot_str = char_to_int
             df[col] = pd.DataFrame(one_hot_str)
         else:
             # obtain statisics
