@@ -167,62 +167,77 @@ for idx in file_to_describe:
 
 ```python
 import numpy as np
-def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/', buffer=32, convert_col=[]):
-    df = pd.read_csv(folder+'{}.csv'.format(file_to_convert), dtype=object)
-    if len(convert_col)==0: convert_col = df.columns
 
-    for col in convert_col:
-        df_describe = df[col].value_counts(dropna=False)    
-        if df_describe.size <= buffer: 
-            # create the rule for categorical attributes converting
-            char_to_int = df[col].astype('category').cat.codes
-            if df_describe.size > 2: 
-                one_hot=np.eye(df_describe.size)[char_to_int].astype(int).astype(str)
-                # compact one hot numerical series into strings
-                one_hot_str = [''.join(x) for x in one_hot]
-            else:
-                one_hot_str = char_to_int
-            df[col] = pd.DataFrame(one_hot_str)
-        else:
-            # obtain statisics
-            df_describe = df[col].astype('float').describe(include='all')
-            # normalise numerical attributes
-            df[col] = (df[col].astype('float') -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
-
+def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/'):
+    df = pd.read_csv(folder+'{}.csv'.format(file_to_convert))
+    for col in df:
+        df_describe = df[col].value_counts(dropna=False)
+        if (df_describe.index.dtype == str) or (df_describe.index.dtype == 'O'):
+            # create the rule for categorical string/Object attribute converting, and make a DF list
+            df_cat = df[col].astype('category').cat.categories.astype(str)
+            # category strings/Objects int -->
+            df[col] = df[col].astype('category').cat.codes
+            if df_describe.size == 2:
+                # for Female/Male similar category
+                df_cat = col + '_' + '/'.join(df_cat)
+                df = df.rename(columns = {col:df_cat}) # axis=1
+            elif df_describe.size > 2:
+                df_cat = col + '_' + df_cat
+                # make one-hot series
+                one_hot=np.eye(df_describe.size)[df[col]].astype(int).astype(str)
+                # drop otiginal categorical string attribute
+                df = df.drop(col, axis=1)
+                # concate new one-hot encoding back to DF
+                df = pd.concat([df,pd.DataFrame(one_hot, columns=[*df_cat])], axis=1)
+        elif df_describe.size > 2: 
+                df_col_as_float = df[col].astype('float')
+                # obtain statisics
+                df_describe = df_col_as_float.describe(include='all')
+                # normalise numerical attributes
+                df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
+                # df_describe.to_csv(folder2+'{}_description.csv'.format(save_file), mode='a',index=True)
     df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
+    
 ``` 
 
 
 ```python       
 buffer = 32
 folder = '../dataset/inner_joined/'
-file_to_convert = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'application_train']
+file_to_convert = ['previous_application', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'installments_payments', 'application_train']
 folder2 = '../dataset/one_hot/'
 
+               
 for idx in file_to_convert:
     save_file = 'one_hot_{}'.format(idx)
-    to_one_hot('inner_'+idx, save_file, folder, folder2, buffer, convert_col=convert_col[idx])
+    to_one_hot('inner_'+idx, save_file, folder, folder2)
 
 ```
 
+<!-- redundant scripts for tips
+
+convert_col = { 'previous_application': ['NAME_CONTRACT_TYPE', 'WEEKDAY_APPR_PROCESS_START', 'FLAG_LAST_APPL_PER_CONTRACT', 'NAME_CONTRACT_STATUS', 'NAME_PAYMENT_TYPE', 'CODE_REJECT_REASON', 'NAME_TYPE_SUITE', 'NAME_CLIENT_TYPE', 'NAME_GOODS_CATEGORY', 'NAME_PORTFOLIO', 'NAME_PRODUCT_TYPE', 'CHANNEL_TYPE', 'NAME_SELLER_INDUSTRY', 'NAME_YIELD_GROUP', 'PRODUCT_COMBINATION', 'NAME_CASH_LOAN_PURPOSE', 'HOUR_APPR_PROCESS_START'],
+                'POS_CASH_balance':['NAME_CONTRACT_STATUS'],
+                'credit_card_balance': ['CNT_DRAWINGS_OTHER_CURRENT', 'NAME_CONTRACT_STATUS'],
+                'bureau': ['CREDIT_ACTIVE', 'CREDIT_CURRENCY', 'CNT_CREDIT_PROLONG', 'CREDIT_TYPE'],
+                'bureau_balance': ['STATUS'],
+                'train': [ 'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CNT_CHILDREN', 'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'FLAG_MOBIL', 'OCCUPATION_TYPE', 'CNT_FAM_MEMBERS', 'REGION_RATING_CLIENT', 'REGION_RATING_CLIENT_W_CITY', 'WEEKDAY_APPR_PROCESS_START', 'HOUR_APPR_PROCESS_START', 'REG_REGION_NOT_WORK_REGION', 'REG_CITY_NOT_LIVE_CITY', 'LIVE_CITY_NOT_WORK_CITY', 'ORGANIZATION_TYPE', 'FONDKAPREMONT_MODE', 'HOUSETYPE_MODE', 'WALLSMATERIAL_MODE', 'EMERGENCYSTATE_MODE', 'DEF_30_CNT_SOCIAL_CIRCLE', 'DEF_60_CNT_SOCIAL_CIRCLE', 'AMT_REQ_CREDIT_BUREAU_HOUR', 'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_WEEK', 'AMT_REQ_CREDIT_BUREAU_MON', 'AMT_REQ_CREDIT_BUREAU_QRT', 'AMT_REQ_CREDIT_BUREAU_YEAR'],
+               }
+    # df_col = [* df.columns]
 
 
-
-
-<!-- redundant scripts for tips -->
-<!--
      pd.DataFrame([ 
      bureau.at[i,'SK_ID_CURR'], bureau.at[i,'SK_ID_BUREAU'], str_list 
-     ]).T.to_csv(save_file_name, mode='a', index=False, header=None) -->
+     ]).T.to_csv(save_file_name, mode='a', index=False, header=None) 
      
-<!-- 
+
 bureau.to_csv(save_file_name, mode='a',index=False) 
 # bureau_balance[bureau_balance['SK_ID_BUREAU']=='5714468'] 
 # bureau_balance['SK_ID_BUREAU'].max() 
 # len(bureau['SK_ID_BUREAU'].unique()) 
-# len(bureau['SK_ID_CURR'].unique()) -->
+# len(bureau['SK_ID_CURR'].unique())
 
-<!-- 
+
 # re-read & inner join all tables
 # train=pd.read_csv(folder+'train.csv', dtype=object) 
 train=pd.read_csv(folder+'application_train.csv', dtype=object) 
@@ -250,4 +265,3 @@ train_index=train_index.reset_index(drop=True)
 if __name__ == "__main__":
     handler({'key1':1,'key2':2,'key3':3},None)
     print ('finished')
--->
