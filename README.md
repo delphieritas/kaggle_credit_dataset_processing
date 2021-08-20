@@ -174,9 +174,10 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
         df_describe = df[col].value_counts(dropna=False)
         if (df_describe.index.dtype == str) or (df_describe.index.dtype == 'O'):
             # create the rule for categorical string/Object attribute converting, and make a DF list
-            df_cat = df[col].astype('category').cat.categories.astype(str)
-            # category strings/Objects int -->
-            df[col] = df[col].astype('category').cat.codes
+            mapping = dict((c, i) for i, c in enumerate(df_describe.index))
+            df_cat = df_describe.index.astype(str)
+            # category strings/Objects --> int 
+            df[col] = [mapping[char] for char in df[col]]
             if df_describe.size == 2:
                 # for Female/Male similar category
                 df_cat = col + '_' + '/'.join(df_cat)
@@ -214,6 +215,9 @@ for idx in file_to_convert:
 ```
 
 <!-- redundant scripts for tips
+
+            df_cat = df[col].astype('category').cat.categories.astype(str)
+            df[col] = df[col].astype('category').cat.codes
 
 convert_col = { 'previous_application': ['NAME_CONTRACT_TYPE', 'WEEKDAY_APPR_PROCESS_START', 'FLAG_LAST_APPL_PER_CONTRACT', 'NAME_CONTRACT_STATUS', 'NAME_PAYMENT_TYPE', 'CODE_REJECT_REASON', 'NAME_TYPE_SUITE', 'NAME_CLIENT_TYPE', 'NAME_GOODS_CATEGORY', 'NAME_PORTFOLIO', 'NAME_PRODUCT_TYPE', 'CHANNEL_TYPE', 'NAME_SELLER_INDUSTRY', 'NAME_YIELD_GROUP', 'PRODUCT_COMBINATION', 'NAME_CASH_LOAN_PURPOSE', 'HOUR_APPR_PROCESS_START'],
                 'POS_CASH_balance':['NAME_CONTRACT_STATUS'],
