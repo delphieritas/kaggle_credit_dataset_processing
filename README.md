@@ -171,46 +171,43 @@ import numpy as np
 def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/'):
     df = pd.read_csv(folder+'{}.csv'.format(file_to_convert))
     for col in df:
-        df_describe = df[col].value_counts(dropna=False)
-        if (df_describe.index.dtype == str) or (df_describe.index.dtype == 'O'):
-            # create the rule for categorical string/Object attribute converting, and make a DF list
-            mapping = dict((c, i) for i, c in enumerate(df_describe.index))
-            df_cat = df_describe.index.astype(str)
-            # category strings/Objects --> int 
-            df[col] = [mapping[char] for char in df[col]]
-            if df_describe.size == 2:
-                # for Female/Male similar category
-                df_cat = col + '_' + '/'.join(df_cat)
-                df = df.rename(columns = {col:df_cat}) # axis=1
-            elif df_describe.size > 2:
-                df_cat = col + '_' + df_cat
-                # make one-hot series
-                one_hot=np.eye(df_describe.size)[df[col]].astype(int).astype(str)
-                # drop otiginal categorical string attribute
-                df = df.drop(col, axis=1)
-                # concate new one-hot encoding back to DF
-                df = pd.concat([df,pd.DataFrame(one_hot, columns=[*df_cat])], axis=1)
-        elif df_describe.size > 2: 
-                df_col_as_float = df[col].astype('float')
-                # obtain statisics
-                df_describe = df_col_as_float.describe(include='all')
-                # normalise numerical attributes
-                df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
-                # df_describe.to_csv(folder2+'{}_description.csv'.format(save_file), mode='a',index=True)
+        if col not in ['SK_ID_PREV', 'SK_ID_CURR', 'SK_ID_BUREAU']:
+            df_describe = df[col].value_counts(dropna=False)
+            if (df_describe.index.dtype == str) or (df_describe.index.dtype == 'O'):
+                # create the rule for categorical string/Object attribute converting, and make a DF list
+                mapping = dict((c, i) for i, c in enumerate(df_describe.index))
+                df_cat = df_describe.index.astype(str)
+                # category strings/Objects --> int 
+                df[col] = [mapping[char] for char in df[col]]
+                if df_describe.size == 2:
+                    # for Female/Male similar category
+                    df_cat = col + '_' + '/'.join(df_cat)
+                    df = df.rename(columns = {col:df_cat}) # axis=1
+                elif df_describe.size > 2:
+                    df_cat = col + '_' + df_cat
+                    # make one-hot series
+                    one_hot=np.eye(df_describe.size)[df[col]].astype(int).astype(str)
+                    # drop otiginal categorical string attribute
+                    df = df.drop(col, axis=1)
+                    # concate new one-hot encoding back to DF
+                    df = pd.concat([df,pd.DataFrame(one_hot, columns=[*df_cat])], axis=1)
+            elif df_describe.size > 2: 
+                    df_col_as_float = df[col].astype('float')
+                    # obtain statisics
+                    df_describe = df_col_as_float.describe(include='all')
+                    # normalise numerical attributes
+                    df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
+                    # df_describe.to_csv(folder2+'{}_description.csv'.format(save_file), mode='a',index=True)
     df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
     
 ``` 
 
 
 ```python       
-folder = '../dataset/inner_joined/'
 file_to_convert = ['previous_application', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'installments_payments', 'application_train']
-folder2 = '../dataset/one_hot/'
-
                
 for idx in file_to_convert:
-    save_file = 'one_hot_{}'.format(idx)
-    to_one_hot('inner_'+idx, save_file, folder, folder2)
+    to_one_hot('inner_'+idx, 'one_hot_'+idx, folder+'inner_joined/', folder+'one_hot/')
 
 ```
 
@@ -226,8 +223,8 @@ convert_col = { 'previous_application': ['NAME_CONTRACT_TYPE', 'WEEKDAY_APPR_PRO
                 'bureau_balance': ['STATUS'],
                 'train': [ 'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CNT_CHILDREN', 'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'FLAG_MOBIL', 'OCCUPATION_TYPE', 'CNT_FAM_MEMBERS', 'REGION_RATING_CLIENT', 'REGION_RATING_CLIENT_W_CITY', 'WEEKDAY_APPR_PROCESS_START', 'HOUR_APPR_PROCESS_START', 'REG_REGION_NOT_WORK_REGION', 'REG_CITY_NOT_LIVE_CITY', 'LIVE_CITY_NOT_WORK_CITY', 'ORGANIZATION_TYPE', 'FONDKAPREMONT_MODE', 'HOUSETYPE_MODE', 'WALLSMATERIAL_MODE', 'EMERGENCYSTATE_MODE', 'DEF_30_CNT_SOCIAL_CIRCLE', 'DEF_60_CNT_SOCIAL_CIRCLE', 'AMT_REQ_CREDIT_BUREAU_HOUR', 'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_WEEK', 'AMT_REQ_CREDIT_BUREAU_MON', 'AMT_REQ_CREDIT_BUREAU_QRT', 'AMT_REQ_CREDIT_BUREAU_YEAR'],
                }
-    # df_col = [* df.columns]
 
+    df_col = [* df.columns]
 
      pd.DataFrame([ 
      bureau.at[i,'SK_ID_CURR'], bureau.at[i,'SK_ID_BUREAU'], str_list 
