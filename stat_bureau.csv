@@ -1,36 +1,18 @@
 ,SK_ID_CURR
-count,438334.0
-mean,278067.4709787514
-std,102670.20649222736
-min,100011.0
-25%,189077.0
-50%,277695.0
-75%,367327.0
-max,456247.0
-,SK_ID_BUREAU
-count,438334.0
-mean,5863410.428999348
-std,524385.8898713074
-min,5000000.0
-25%,5405660.25
-50%,5831689.5
-75%,6300224.75
-max,6843457.0
-,CREDIT_ACTIVE
 count,438334
-unique,4
-top,Closed
-freq,275657
+unique,72793
+top,120860
+freq,116
+,SK_ID_BUREAU
+count,438334
+unique,438334
+top,5714462
+freq,1
 ,CREDIT_ACTIVE
 Closed,275657
 Active,160977
 Sold,1695
 Bad debt,5
-,CREDIT_CURRENCY
-count,438334
-unique,4
-top,currency 1
-freq,438053
 ,CREDIT_CURRENCY
 currency 1,438053
 currency 2,245
@@ -90,17 +72,6 @@ min,0.0
 50%,0.0
 75%,0.0
 max,9.0
-,CNT_CREDIT_PROLONG
-0,435518
-1,2319
-2,400
-3,64
-4,22
-5,6
-6,2
-9,1
-8,1
-7,1
 ,AMT_CREDIT_SUM
 count,438334.0
 mean,332049.6682163716
@@ -137,11 +108,6 @@ min,0.0
 50%,0.0
 75%,0.0
 max,3681063.0
-,CREDIT_TYPE
-count,438334
-unique,12
-top,Consumer credit
-freq,312147
 ,CREDIT_TYPE
 Consumer credit,312147
 Credit card,111585
