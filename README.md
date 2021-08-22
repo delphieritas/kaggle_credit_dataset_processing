@@ -4,7 +4,17 @@ This document is to process the following kaggle dataset, and to concat suppleme
 ```
 https://www.kaggle.com/c/home-credit-default-risk/data?select=application_train.csv
 ```
+There are 7 different sources of data:
 
+application_train: the main training data with information about each loan application at Home Credit. Every loan has its own row and is identified by the feature SK_ID_CURR. The training application data comes with the TARGET indicating 0: the loan was repaid or 1: the loan was not repaid.
+bureau: data concerning client's previous credits from other financial institutions. Each previous credit has its own row in bureau, but one loan in the application data can have multiple previous credits.
+bureau_balance: monthly data about the previous credits in bureau. Each row is one month of a previous credit, and a single previous credit can have multiple rows, one for each month of the credit length.
+previous_application: previous applications for loans at Home Credit of clients who have loans in the application data. Each current loan in the application data can have multiple previous loans. Each previous application has one row and is identified by the feature SK_ID_PREV.
+POS_CASH_BALANCE: monthly data about previous point of sale or cash loans clients have had with Home Credit. Each row is one month of a previous point of sale or cash loan, and a single previous loan can have many rows.
+credit_card_balance: monthly data about previous credit cards clients have had with Home Credit. Each row is one month of a credit card balance, and a single credit card can have many rows.
+installments_payment: payment history for previous loans at Home Credit. There is one row for every made payment and one row for every missed payment.
+
+------------------
 According to the dataset description, table bureau_balance.csv will firstly inner join bureau.csv on 'SK_ID_BUREAU' attribute, forming a combined bureau table. 
 
 Then the following 4 tables, together with the above combined bureau table, will inner join application_train.csv on 'SK_ID_CURR' attribute:
@@ -16,7 +26,6 @@ installments_payments.csv
 Each supplemental tables will eventually become relevant attributes in the final combined csv w.r.t. 'SK_ID_CURR'.
 
 In consideration of keeping the potential connections among supplemental tables, we sort each supplemental table on their key attribute before padding them into final combined file.
-
 
 -------------------------
 ## Code scripts of processing the above operation are provided here
