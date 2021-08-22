@@ -228,7 +228,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/'):
                 # normalise numerical attributes
                 df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
                 # rename the column, adding min~max value to its original name
-                df_cat = col + df_describe.loc['min'] + '~' + df_describe.loc['max']
+                df_cat = col + str(df_describe.loc['min']) + '~' + str(df_describe.loc['max'])
                 df = df.rename(columns = {col:df_cat}) # axis=1
     df.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=False)
     
@@ -239,7 +239,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/'):
 file_to_convert = ['previous_application', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'installments_payments', 'application_train']
                
 for idx in file_to_convert:
-    to_one_hot('inner_joined/inner_'+idx, 'one_hot/one_hot_'+idx, folder+'../dataset/')
+    to_one_hot('inner_joined/inner_'+idx, 'one_hot/one_hot_'+idx, folder)
 
 ```
 
