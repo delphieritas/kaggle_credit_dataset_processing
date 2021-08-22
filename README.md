@@ -134,9 +134,6 @@ combined_train = handler(base_table, supplemental_table, key_attribute, folder)
 combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, header=True, sep=',')
 ```
 
-<!-- bureau_agg = bureau.drop(columns = ['SK_ID_BUREAU']).groupby('SK_ID_CURR', as_index = False).agg(['count', 'mean', 'max', 'min', 'sum']).reset_index() -->
-<!-- bureau_agg.head() -->
-
 -----------------------
 ## Code script for making inner joined files
 
@@ -173,10 +170,21 @@ for idx in file_to_inner_join:
 ----------------------
 ## Code for describe dataset files
 
-
+<!-- bureau_agg = bureau.drop(columns = ['SK_ID_BUREAU']).groupby('SK_ID_CURR', as_index = False).agg(['count', 'mean', 'max', 'min', 'sum']).reset_index() -->
+<!-- bureau_agg.head() -->
 ```python
 
 import numpy as np
+
+for col in df:
+    if (col in ['SK_ID_PREV', 'SK_ID_CURR', 'SK_ID_BUREAU']) :
+        (df[col].astype('O').describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+    else:
+        df_describe = df[col].value_counts(dropna=False)
+        if (df_describe.index.dtype == str) or (df_describe.index.dtype == 'O') or df_describe.size <= buffer:
+            df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+        elif (df_describe.index.dtype == float or df_describe.index.dtype == int): 
+            (df[col].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
 
 def get_stat(df_name, save_file, folder='dataset/', buffer=2):
     df = pd.read_csv(folder+'{}.csv'.format(df_name))
@@ -184,15 +192,20 @@ def get_stat(df_name, save_file, folder='dataset/', buffer=2):
     df_col = [* df.columns]
     # iterate through columns
     for col in df:
-        # count categorical info
-        df_describe = df[col].value_counts(dropna=False)
-        # save the description into csv, including category info as index
-        df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
-        # obtain min/max/mean/std info only when the attributes are numerical values
-        if (df_describe.index.dtype == float or df_describe.index.dtype == int) and df_describe.size > buffer: 
-            (df[col].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
-            # remove numerical columns names from list
-            df_col.remove(col)
+        if (col in ['SK_ID_PREV', 'SK_ID_CURR', 'SK_ID_BUREAU']) :
+            (df[col].astype('O').describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+        else:
+            # count categorical info
+            df_describe = df[col].value_counts(dropna=False)
+            if (df_describe.index.dtype == str) or (df_describe.index.dtype == 'O') or df_describe.size <= buffer:
+                # save the description into csv, including category info as index
+                df_describe.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+            # obtain min/max/mean/std info only when the attributes are numerical values
+            elif (df_describe.index.dtype == float or df_describe.index.dtype == int): 
+                (df[col].describe(include='all')).to_csv(folder+'{}.csv'.format(save_file), mode='a',index=True)
+                # remove numerical columns names from list
+                df_col.remove(col)
+    # return categorical column names
     return {df_name: df_col}
 
 
@@ -202,7 +215,7 @@ file_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_b
 convert_col={}
 
 for idx in file_to_describe:
-    convert_col = {**get_stat(df_name = 'inner_joined/inner_{}'.format(idx), save_file = 'inner_stat/stat_{}'.format(idx), folder = '../dataset/'), **convert_col}
+    convert_col = {get_stat(df_name = 'inner_joined/inner_{}'.format(idx), save_file = 'inner_stat/stat_{}'.format(idx), folder = folder), **convert_col}
     
 ```    
 ------------------------
@@ -257,7 +270,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/'):
 file_to_convert = ['previous_application', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'installments_payments', 'application_train']
                
 for idx in file_to_convert:
-    to_one_hot('inner_joined/inner_'+idx, 'one_hot/one_hot_'+idx, folder)
+    to_one_hot('inner_joined/inner_'+idx, 'one_hot/one_hot_'+idx, folder = folder)
 
 ```
 
