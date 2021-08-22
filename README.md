@@ -227,7 +227,9 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
                     df_describe = df_col_as_float.describe(include='all')
                     # normalise numerical attributes
                     df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
-                    # df_describe.to_csv(folder2+'{}_description.csv'.format(save_file), mode='a',index=True)
+                    # rename the column, adding min~max value to its original name
+                    df_cat = col + df_describe.loc['min'] + '~' + df_describe.loc['max']
+                    df = df.rename(columns = {col:df_cat}) # axis=1
     df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
     
 ``` 
