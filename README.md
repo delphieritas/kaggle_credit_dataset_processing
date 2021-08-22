@@ -123,6 +123,39 @@ combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, 
 ```
 
 
+-----------------------
+## Code script for making inner joined files
+
+```python
+# a list of files to inner join with application_train.csv
+# note, according to the kaggle dataset website, bureau_balance.csv dose not connect to application_train.csv directly, so we don't process it here
+file_to_inner_join = ['previous_application', 'installments_payments', 'POS_CASH_balance', 'credit_card_balance', 'bureau']
+folder = '../dataset/'
+
+base_file = pd.read_csv(folder+'{}.csv'.format('application_train'), dtype=object)
+
+# firstly, make a new application_train.csv which only contains inner joined entries with all other files
+for idx in file_to_inner_join:
+    df=pd.read_csv(folder+'{}.csv'.format(idx), dtype=object)
+    base_file=base_file[base_file['SK_ID_CURR'].isin(df['SK_ID_CURR'])]
+
+# save this new application_train.csv
+base_file.to_csv(folder+'inner_joined/inner_{}.csv'.format('application_train'), mode='a',index=False)
+
+# secondly, based on this new application_train.csv, extract inner joined entries from all other files, and save 
+for idx in file_to_inner_join:
+    df=pd.read_csv(folder+'{}.csv'.format(idx), dtype=object)
+    df=df[df['SK_ID_CURR'].isin(base_file['SK_ID_CURR'])]
+    df.to_csv(folder+'inner_joined/inner_{}.csv'.format(idx), mode='a',index=False)
+    if idx == 'burea':
+        # now we handle bureau_balance.csv separately 
+        df2=pd.read_csv(folder+'{}.csv'.format('bureau_balance'), dtype=object)
+        # note, bureau_balance.csv connects to burea.csv on 'SK_ID_BUREAU' attribute
+        df2=df2[df2['SK_ID_BUREAU'].isin(df['SK_ID_BUREAU'])]
+        df2.to_csv(folder+'inner_joined/inner_{}.csv'.format('bureau_balance'), mode='a',index=False)
+```
+
+
 ----------------------
 ## Code for describe dataset files
 
@@ -155,10 +188,7 @@ file_to_describe = ['previous_application', 'installments_payments', 'POS_CASH_b
 convert_col={}
 
 for idx in file_to_describe:
-    folder = 'dataset/inner_joined/'
-    df_name = '{}'.format(idx)
-    save_file = 'inner_stat/stat_{}'.format(idx)
-    convert_col = {**get_stat(df_name, save_file, folder), **convert_col}
+    convert_col = {**get_stat(df_name = 'inner_joined/inner_{}'.format(idx), save_file = 'inner_stat/stat_{}'.format(idx), folder = '../dataset/'), **convert_col}
     
 ```    
 ------------------------
@@ -207,7 +237,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
 file_to_convert = ['previous_application', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'installments_payments', 'application_train']
                
 for idx in file_to_convert:
-    to_one_hot('inner_'+idx, 'one_hot_'+idx, folder+'inner_joined/', folder+'one_hot/')
+    to_one_hot('inner_'+idx, 'one_hot_'+idx, folder+'../dataset/inner_joined/', folder+'one_hot/')
 
 ```
 
