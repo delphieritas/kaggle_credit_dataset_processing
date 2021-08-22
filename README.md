@@ -14,6 +14,9 @@ POS_CASH_BALANCE: monthly data about previous point of sale or cash loans client
 credit_card_balance: monthly data about previous credit cards clients have had with Home Credit. Each row is one month of a credit card balance, and a single credit card can have many rows.
 installments_payment: payment history for previous loans at Home Credit. There is one row for every made payment and one row for every missed payment.
 
+
+<!-- There are anomalous data lies in app_train['DAYS_EMPLOYED'].describe(), the max value is 365243.000000 -->
+
 ------------------
 According to the dataset description, table bureau_balance.csv will firstly inner join bureau.csv on 'SK_ID_BUREAU' attribute, forming a combined bureau table. 
 
@@ -131,6 +134,8 @@ combined_train = handler(base_table, supplemental_table, key_attribute, folder)
 combined_train.to_csv(folder+'{}.csv'.format(save_file), mode='a', index=False, header=True, sep=',')
 ```
 
+<!-- bureau_agg = bureau.drop(columns = ['SK_ID_BUREAU']).groupby('SK_ID_CURR', as_index = False).agg(['count', 'mean', 'max', 'min', 'sum']).reset_index() -->
+<!-- bureau_agg.head() -->
 
 -----------------------
 ## Code script for making inner joined files
@@ -203,6 +208,10 @@ for idx in file_to_describe:
 ------------------------
 ## Code for converting data into one-hot series
 
+If we only have two unique values for a categorical variable (such as Male/Female), then label encoding is fine.
+
+For more than 2 unique categories, one-hot encoding is the safe option.
+![image](https://user-images.githubusercontent.com/34205896/130356127-f32440f4-c017-4832-b5e4-5d2f30d90bdd.png)
 
 ```python
 import numpy as np
