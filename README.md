@@ -198,7 +198,7 @@ for idx in file_to_describe:
 ```python
 import numpy as np
 
-def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../dataset/'):
+def to_one_hot(file_to_convert, save_file, folder='.../dataset/'):
     df = pd.read_csv(folder+'{}.csv'.format(file_to_convert))
     for col in df:
         if col not in ['SK_ID_PREV', 'SK_ID_CURR', 'SK_ID_BUREAU']:
@@ -222,15 +222,15 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
                     # concate new one-hot encoding back to DF
                     df = pd.concat([df,pd.DataFrame(one_hot, columns=[*df_cat])], axis=1)
             elif df_describe.size > 2: 
-                    df_col_as_float = df[col].astype('float')
-                    # obtain statisics
-                    df_describe = df_col_as_float.describe(include='all')
-                    # normalise numerical attributes
-                    df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
-                    # rename the column, adding min~max value to its original name
-                    df_cat = col + df_describe.loc['min'] + '~' + df_describe.loc['max']
-                    df = df.rename(columns = {col:df_cat}) # axis=1
-    df.to_csv(folder2+'{}.csv'.format(save_file), mode='a',index=False)
+                df_col_as_float = df[col].astype('float')
+                # obtain statisics
+                df_describe = df_col_as_float.describe(include='all')
+                # normalise numerical attributes
+                df[col] = (df_col_as_float -  df_describe.loc['min']) / ( df_describe.loc['max'] - df_describe.loc['min'])
+                # rename the column, adding min~max value to its original name
+                df_cat = col + df_describe.loc['min'] + '~' + df_describe.loc['max']
+                df = df.rename(columns = {col:df_cat}) # axis=1
+    df.to_csv(folder+'{}.csv'.format(save_file), mode='a',index=False)
     
 ``` 
 
@@ -239,7 +239,7 @@ def to_one_hot(file_to_convert, save_file, folder='.../dataset/', folder2='.../d
 file_to_convert = ['previous_application', 'POS_CASH_balance', 'credit_card_balance', 'bureau', 'bureau_balance', 'installments_payments', 'application_train']
                
 for idx in file_to_convert:
-    to_one_hot('inner_'+idx, 'one_hot_'+idx, folder+'../dataset/inner_joined/', folder+'one_hot/')
+    to_one_hot('inner_joined/inner_'+idx, 'one_hot/one_hot_'+idx, folder+'../dataset/')
 
 ```
 
@@ -261,9 +261,7 @@ convert_col = { 'previous_application': ['NAME_CONTRACT_TYPE', 'WEEKDAY_APPR_PRO
      pd.DataFrame([ 
      bureau.at[i,'SK_ID_CURR'], bureau.at[i,'SK_ID_BUREAU'], str_list 
      ]).T.to_csv(save_file_name, mode='a', index=False, header=None) 
-     
 
-bureau.to_csv(save_file_name, mode='a',index=False) 
 # bureau_balance[bureau_balance['SK_ID_BUREAU']=='5714468'] 
 # bureau_balance['SK_ID_BUREAU'].max() 
 # len(bureau['SK_ID_BUREAU'].unique()) 
