@@ -73,7 +73,7 @@ def handler(base_table, supplemental_table, key_attribute, folder):
             mask = (df.loc[:,key_attribute] == base_table[key_attribute].iloc[i]).all(axis=1)
             if mask.any():
                 # extract supplemental entries and drop duplicated key_attribute in  extracted supplemental_table
-                selected_entries = df[mask].drop(key_attribute, axis=1)
+                selected_entries = df[mask].drop(df.columns[df.columns.isin(['SK_ID_PREV', 'SK_ID_CURR', 'SK_ID_BUREAU',*key_attribute])], axis=1)
                 for j in selected_entries:
                     # j as each attribute in supplemental_table columns, loop across columns
                     if j == selected_entries.columns[0]:
